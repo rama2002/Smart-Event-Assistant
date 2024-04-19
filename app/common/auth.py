@@ -7,10 +7,10 @@ from app.database.user_db import get_user_by_username
 from app.schema.user_models import User
 from jose import jwt
 from fastapi import status
-from app.config import SECRET_KEY, ALGORITHM
+from app.config import SECRET_KEY, ALGO
 
-SECRET_KEY = "a_very_secret_key" 
-ALGORITHM = "HS256"
+#SECRET_KEY = "a_very_secret_key" 
+#ALGO = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -21,7 +21,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         headers={"WWW-Authenticate": "Bearer"}
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGO])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -71,5 +71,5 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     else:
         expire = datetime.now(ZoneInfo("UTC")) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm= ALGO)
     return encoded_jwt

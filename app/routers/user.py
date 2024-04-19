@@ -1,73 +1,19 @@
 from typing import Optional
 from fastapi import HTTPException, Depends, Body, Path,status,Security,APIRouter
 from pydantic import EmailStr
-from app.common.auth import ALGORITHM, SECRET_KEY
-from app.database.user_db import create_user, get_user_by_username, update_user, get_user_by_email, authenticate_user
+from app.common.auth import create_access_token, get_current_admin_user
+from app.database.user_db import create_user, update_user, get_user_by_email, authenticate_user
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
 from app.schema.user_models import User, UserCreate 
-from zoneinfo import ZoneInfo 
 from app.logging_config import get_logger
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+
 
 logger = get_logger(__name__)
 router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"}
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    user = get_user_by_username(username=username)
-    if user is None:
-        raise credentials_exception
-    return User(**user)
-
-async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges"
-        )
-    return current_user
-
-async def get_current_speaker_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role_id != 2:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges"
-        )
-    return current_user
-
-async def get_current_attendee_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role_id != 3:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges"
-        )
-    return current_user
-
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(ZoneInfo("UTC")) + expires_delta
-    else:
-        expire = datetime.now(ZoneInfo("UTC")) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
 
 @router.post("/users/", response_model=User, status_code=201)
 async def create_user_endpoint(user: UserCreate,current_user: User = Security(get_current_admin_user)):

@@ -1,6 +1,5 @@
 import configparser
 
-
 config = configparser.ConfigParser()
 config.read("app/config.ini")
 
@@ -10,4 +9,4 @@ DB_HOST = config["DATABASE"]["DB_HOST"]
 DB_NAME = config["DATABASE"]["DB_NAME"]
 
 SECRET_KEY = config['JWT']['SECRET_KEY']
-ALGORITHM = config['JWT']['ALGORITHM']
+ALGO = config['JWT']['ALGO']

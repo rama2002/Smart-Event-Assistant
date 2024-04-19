@@ -1,8 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends, Query, Security
-from app.common.auth import get_current_admin_user, get_current_adminspeaker_user, get_current_attendee_user
+from fastapi import APIRouter, HTTPException, Query, Security
+from app.common.auth import get_current_admin_user, get_current_adminspeaker_user, get_current_attendee_user, get_current_user
 from app.database.event_db import add_event, fetch_filtered_events, update_event, delete_event, enroll_in_event, unenroll_in_event
 from app.schema.event_models import Event, EventCreate, EventUpdate  
-from app.routers.user import get_current_user
 import logging
 from datetime import date
 from typing import Optional, List
