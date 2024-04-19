@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from app.logging_config import get_logger
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-#from app.config import SECRET_KEY, ALGORITHM
+
 logger = get_logger(__name__)
 router = APIRouter()
 

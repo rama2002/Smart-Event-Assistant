@@ -7,6 +7,7 @@ from app.database.user_db import get_user_by_username
 from app.schema.user_models import User
 from jose import jwt
 from fastapi import status
+from app.config import SECRET_KEY, ALGORITHM
 
 SECRET_KEY = "a_very_secret_key" 
 ALGORITHM = "HS256"
