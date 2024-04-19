@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException, Query, Security
-from app.common.auth import get_current_admin_user, get_current_adminspeaker_user, get_current_attendee_user, get_current_user
+import io
+from fastapi import APIRouter, File, HTTPException, Query, Security, UploadFile
+from fastapi.responses import StreamingResponse
+from app.common.auth import get_current_admin_user, get_current_adminspeaker_user, get_current_attendee_user, get_current_speaker_user, get_current_user
+from app.database.attachment_db import add_attachment, delete_attachment, fetch_attachments_for_event, get_attachment
 from app.database.event_db import add_event, fetch_filtered_events, update_event, delete_event, enroll_in_event, unenroll_in_event
+from app.schema.attachment_models import AttachmentInDB
 from app.schema.event_models import Event, EventCreate, EventUpdate  
 import logging
 from datetime import date
@@ -98,3 +102,43 @@ async def get_events(
     else:
         raise HTTPException(status_code=404, detail="No events found")
     
+@router.post("/events/{event_id}/attachments")
+async def upload_attachment(event_id: int, file: UploadFile = File(...), current_user: User = Security(get_current_adminspeaker_user)):
+    file_content = await file.read()
+    attachment = add_attachment(
+        event_id=event_id,
+        file_name=file.filename,
+        mime_type=file.content_type,
+        file_size=len(file_content),
+        file_content=file_content
+    )
+    if attachment:
+        return {"message": "File uploaded successfully", "attachment_id": attachment['attachment_id']}
+    else:
+        raise HTTPException(status_code=500, detail="File upload failed")
+    
+@router.get("/events/attachments/{attachment_id}")
+async def view_attachment(attachment_id: int, current_user: User = Security(get_current_user)):
+    attachment = get_attachment(attachment_id)
+    if attachment:
+        return StreamingResponse(io.BytesIO(attachment['file_content']), media_type=attachment['mime_type'])
+    else:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+    
+    
+@router.delete("/events/attachments/{attachment_id}")
+async def remove_attachment(attachment_id: int, current_user: User = Security(get_current_adminspeaker_user)):
+    result = delete_attachment(attachment_id)
+    if result:
+        return {"message": "Attachment deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+    
+    
+@router.get("/events/{event_id}/attachments", response_model=List[AttachmentInDB])
+async def list_event_attachments(event_id: int, current_user: User = Security(get_current_user)):
+    attachments = fetch_attachments_for_event(event_id)
+    if attachments:
+        return attachments
+    else:
+        raise HTTPException(status_code=404, detail="No attachments found for this event")

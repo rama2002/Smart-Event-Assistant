@@ -9,8 +9,6 @@ from jose import jwt
 from fastapi import status
 from app.config import SECRET_KEY, ALGO
 
-#SECRET_KEY = "a_very_secret_key" 
-#ALGO = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -57,7 +55,7 @@ async def get_current_attendee_user(current_user: User = Depends(get_current_use
     return current_user
 
 async def get_current_adminspeaker_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role_id != 1 or current_user.role_id != 2:
+    if current_user.role_id != 1 and current_user.role_id != 2:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user doesn't have enough privileges"
