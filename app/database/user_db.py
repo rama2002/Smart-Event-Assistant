@@ -45,8 +45,19 @@ def authenticate_user(username: str, password: str):
     return None
 
 def get_user_by_username(username):
-    query = "SELECT * FROM public.users WHERE username = %s;"
-    return execute_query(query, (username,), fetchone=True)
+    query = "SELECT user_id, username, email, password_hash, role_id, created_at FROM public.users WHERE username = %s;"
+    result = execute_query(query, (username,), fetchone=True)
+    if result:
+        user_dict = {
+            "user_id": result[0],
+            "username": result[1],
+            "email": result[2],
+            "password_hash": result[3],
+            "role_id": result[4],
+            "created_at": result[5]
+        }
+        return user_dict
+    return None
 
 
 

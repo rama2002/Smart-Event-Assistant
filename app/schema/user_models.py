@@ -16,3 +16,5 @@ class User(BaseModel):
     user_id: int
     username: str
     email: EmailStr
+    role_id: int
+

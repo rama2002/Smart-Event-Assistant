@@ -1,7 +1,8 @@
 from typing import Optional
 from fastapi import HTTPException, Depends, Body, Path,status,Security,APIRouter
 from pydantic import EmailStr
-from app.database.user_db import create_user, update_user, get_user_by_email, authenticate_user
+from app.common.auth import ALGORITHM, SECRET_KEY
+from app.database.user_db import create_user, get_user_by_username, update_user, get_user_by_email, authenticate_user
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
@@ -12,25 +13,51 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 #from app.config import SECRET_KEY, ALGORITHM
 logger = get_logger(__name__)
-
-SECRET_KEY = "a_very_secret_key" 
-ALGORITHM = "HS256"
-
+router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
-        return {"user_id": user_id}
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
     except JWTError:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+        raise credentials_exception
+    user = get_user_by_username(username=username)
+    if user is None:
+        raise credentials_exception
+    return User(**user)
 
-router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role_id != 1:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges"
+        )
+    return current_user
+
+async def get_current_speaker_user(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role_id != 2:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges"
+        )
+    return current_user
+
+async def get_current_attendee_user(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role_id != 3:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges"
+        )
+    return current_user
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -43,7 +70,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 @router.post("/users/", response_model=User, status_code=201)
-async def create_user_endpoint(user: UserCreate):
+async def create_user_endpoint(user: UserCreate,current_user: User = Security(get_current_admin_user)):
     new_user = create_user(user.username, user.email, user.password, user.role_id)
     if not new_user:
         raise HTTPException(status_code=400, detail="Could not create user.")
@@ -60,7 +87,8 @@ async def update_user_endpoint(
         user_id: int = Path(..., description="The ID of the user to update"),
         username: Optional[str] = Body(None, description="New username"),
         email: Optional[EmailStr] = Body(None, description="New email address"),
-        password: Optional[str] = Body(None, description="New password")):
+        password: Optional[str] = Body(None, description="New password"),
+        current_user: User = Security(get_current_admin_user)):
     updated_user = update_user(user_id, username, email, password)
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -74,7 +102,7 @@ async def update_user_endpoint(
 
 
 @router.get("/users/", response_model=User)
-async def get_user_endpoint(email: EmailStr):
+async def get_user_endpoint(email: EmailStr,current_user: User = Security(get_current_admin_user)):
     user = get_user_by_email(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -86,7 +114,7 @@ async def get_user_endpoint(email: EmailStr):
     }
     return data_dict
 
-@router.post("/login/")
+@router.post("/token/")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -98,19 +126,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": user['username']})  
     return {"access_token": access_token, "token_type": "bearer"}
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    logger.info(f"Received token: {token}")
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        logger.info(f"Decoded payload: {payload}")
-        user_id: int = payload.get("user_id")
-        if user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
-        return {"user_id": user_id}
-    except JWTError as e:
-        logger.error(f"JWTError: {e}")
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
 
 @router.get("/users/me")
-async def read_users_me(current_user: str = Security(get_current_user)):
-    return {"username": current_user}
+async def read_users_me(current_user: User = Security(get_current_admin_user)):
+    del current_user["password_hash"]
+    return current_user
+
+
+
