@@ -124,6 +124,19 @@ def fetch_filtered_events(interest_id, title, location, event_date, page_number,
 
    
     results = execute_query(query, parameters, fetch=True)
-    return results
+    events = [
+        {
+            "event_id": result[0],
+            "title": result[1],
+            "description": result[2],
+            "start_date": result[3],
+            "end_date": result[4],
+            "location": result[5],
+            "created_by": result[6]
+        }
+        for result in results
+    ]
+    return events
+   
 
 

@@ -98,3 +98,4 @@ async def get_events(
         return events
     else:
         raise HTTPException(status_code=404, detail="No events found")
+    
