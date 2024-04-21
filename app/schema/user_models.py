@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field
 
 class UserCreate(BaseModel):
     username: str
@@ -16,5 +17,5 @@ class User(BaseModel):
     user_id: int
     username: str
     email: EmailStr
-    role_id: int
+    role_id: Optional[int] = Field(None, description="The role ID of the user")
 

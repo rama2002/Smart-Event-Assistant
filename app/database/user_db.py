@@ -42,8 +42,16 @@ def update_user(user_id, username=None, email=None, password=None):
     return execute_query(query, params, fetchone=True)
 
 def get_user_by_email(email):
-    query = "SELECT user_id, username, email, created_at, role_id FROM public.users WHERE email = %s;"
-    return execute_query(query, (email,), fetchone=True)
+    query = "SELECT user_id, username, email, role_id FROM users WHERE email = %s;"
+    result = execute_query(query, (email,), fetchone=True)
+    if result:
+        return {
+            "user_id": result['user_id'],
+            "username": result['username'],
+            "email": result['email'],
+            "role_id": result['role_id']
+        }
+    return None
 
 def authenticate_user(username: str, password: str):
     user_record = get_user_by_username(username)

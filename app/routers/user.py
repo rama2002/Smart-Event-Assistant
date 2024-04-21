@@ -27,23 +27,17 @@ async def create_user_endpoint(user: UserCreate, current_user: User = Security(g
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Could not create user.")
     return new_user
 
-@router.put("/users/{user_id}", response_model=User)
-async def update_user_endpoint(
-        user_id: int = Path(..., description="The ID of the user to update"),
-        username: Optional[str] = Body(None, description="New username"),
-        email: Optional[EmailStr] = Body(None, description="New email address"),
-        password: Optional[str] = Body(None, description="New password"),
-        current_user: User = Security(get_current_admin_user)):
-    updated_user = update_user(user_id, username, email, password)
-    if not updated_user:
-        raise HTTPException(status_code=404, detail="User not found.")
-    
-    data_dict = {
-        "user_id": updated_user[0],
-        "username": updated_user[1],
-        "email": updated_user[2]
+@router.get("/users/", response_model=User)
+async def get_user_endpoint(email: EmailStr, current_user: User = Security(get_current_admin_user)):
+    user = get_user_by_email(email)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    return {
+        "user_id": user['user_id'],
+        "username": user['username'],
+        "email": user['email'],
+        "role_id": user['role_id']  
     }
-    return data_dict
 
 
 @router.get("/users/", response_model=User)
