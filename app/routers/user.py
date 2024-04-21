@@ -15,18 +15,17 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-@router.post("/users/", response_model=User, status_code=201)
-async def create_user_endpoint(user: UserCreate,current_user: User = Security(get_current_admin_user)):
-    new_user = create_user(user.username, user.email, user.password, user.role_id)
+@router.post("/users/", response_model=User, status_code=status.HTTP_201_CREATED)
+async def create_user_endpoint(user: UserCreate, current_user: User = Security(get_current_admin_user)):
+    new_user = create_user(
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        role_id=user.role_id
+    )
     if not new_user:
-        raise HTTPException(status_code=400, detail="Could not create user.")
-    data_dict = {
-        "user_id": new_user[0],
-        "username": new_user[1],
-        "email": new_user[2],
-        "role_id": new_user[3]  
-    }
-    return data_dict
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Could not create user.")
+    return new_user
 
 @router.put("/users/{user_id}", response_model=User)
 async def update_user_endpoint(

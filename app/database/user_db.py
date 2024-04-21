@@ -12,7 +12,15 @@ def create_user(username, email, password, role_id):
     VALUES (%s, %s, %s, %s)
     RETURNING user_id, username, email, created_at, role_id;
     '''
-    return execute_query(query, (username, email, hashed_password.decode('utf-8'), role_id), fetchone=True)
+    new_user_data = execute_query(query, (username, email, hashed_password.decode('utf-8'), role_id), fetchone=True)
+    if new_user_data:
+        return {
+            "user_id": new_user_data["user_id"],
+            "username": new_user_data["username"],
+            "email": new_user_data["email"],
+            "role_id": new_user_data["role_id"]  
+        }
+    return None
 
 
 def update_user(user_id, username=None, email=None, password=None):
