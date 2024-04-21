@@ -1,7 +1,9 @@
 import bcrypt
 from app.database.db import execute_query  
 from passlib.context import CryptContext
+from app.logging_config import get_logger
 
+logger = get_logger(__name__)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -39,8 +41,18 @@ def update_user(user_id, username=None, email=None, password=None):
     
     query = f"UPDATE public.users SET {', '.join(query_parts)} WHERE user_id = %s RETURNING user_id, username, email, created_at, role_id;"
     params.append(user_id)
-    return execute_query(query, params, fetchone=True)
-
+    
+    logger.debug(f"Executing query: {query}")
+    logger.debug(f"With parameters: {params}")
+    result = execute_query(query, params, fetchone=True)
+    if result:
+        return {
+            "user_id": result['user_id'],
+            "username": result['username'],
+            "email": result['email'],
+            "role_id": result['role_id']
+        }
+    return None
 def get_user_by_email(email):
     query = "SELECT user_id, username, email, role_id FROM users WHERE email = %s;"
     result = execute_query(query, (email,), fetchone=True)

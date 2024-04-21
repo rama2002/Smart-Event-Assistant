@@ -4,7 +4,7 @@ from pydantic import EmailStr
 from app.common.auth import create_access_token, get_current_admin_user
 from app.database.user_db import create_user, update_user, get_user_by_email, authenticate_user
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.schema.user_models import User, UserCreate 
+from app.schema.user_models import User, UserCreate, UserUpdate 
 from app.logging_config import get_logger
 from fastapi.security import OAuth2PasswordBearer
 
@@ -40,18 +40,28 @@ async def get_user_endpoint(email: EmailStr, current_user: User = Security(get_c
     }
 
 
-@router.get("/users/", response_model=User)
-async def get_user_endpoint(email: EmailStr,current_user: User = Security(get_current_admin_user)):
-    user = get_user_by_email(email)
-    if not user:
+@router.put("/users/{user_id}", response_model=User)
+async def update_user_endpoint(
+        user_id: int,
+        user_update: UserUpdate,
+        current_user: User = Depends(get_current_admin_user)):
+    updated_user = update_user(
+        user_id=user_id,
+        username=user_update.username,
+        email=user_update.email,
+        password=user_update.password
+    )
+    if updated_user:
+       
+        data_dict = {
+            "user_id": updated_user['user_id'],
+            "username": updated_user['username'],
+            "email": updated_user['email'],
+            "role_id": updated_user['role_id']
+        }
+        return data_dict
+    else:
         raise HTTPException(status_code=404, detail="User not found.")
-    
-    data_dict = {
-        "user_id": user[0],
-        "username": user[1],
-        "email": user[2]
-    }
-    return data_dict
 
 @router.post("/token/")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
