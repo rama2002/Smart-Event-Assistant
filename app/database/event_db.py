@@ -14,7 +14,6 @@ def get_event_by_id(event_id):
     '''
     result = execute_query(query, (event_id,), fetchone=True)
     if result:
-        # Transform the result to match the Event model keys
         return {
             "event_id": result[0],
             "title": result[1],
@@ -100,8 +99,6 @@ def check_enrollment(user_id, event_id):
 
 def fetch_filtered_events(interest_id, title, location, event_date, page_number, page_size, user_id=None):
     parameters = []
-
-    # Query parts for fetching total count
     count_base_query = """
     SELECT COUNT(*)
     FROM events e
@@ -110,7 +107,6 @@ def fetch_filtered_events(interest_id, title, location, event_date, page_number,
     """
     count_query = count_base_query
 
-    # Query parts for fetching events
     events_base_query = """
     SELECT e.event_id, e.title, e.description, e.start_date, e.end_date, e.location, e.created_by, FALSE AS recommended, cover_attachment_id
     FROM events e
@@ -120,10 +116,17 @@ def fetch_filtered_events(interest_id, title, location, event_date, page_number,
     events_query = events_base_query
 
     if user_id:
-        # Adding user interest filtering
         events_query = """
         SELECT e.event_id, e.title, e.description, e.start_date, e.end_date, e.location, e.created_by,
         CASE WHEN ui.interest_id IS NOT NULL THEN TRUE ELSE FALSE END AS recommended, cover_attachment_id
+        FROM events e
+        LEFT JOIN event_interests ei ON e.event_id = ei.event_id
+        LEFT JOIN user_interests ui ON ui.interest_id = ei.interest_id AND ui.user_id = %s
+        WHERE 1=1
+        """
+    
+        count_query = """
+        SELECT COUNT(*)
         FROM events e
         LEFT JOIN event_interests ei ON e.event_id = ei.event_id
         LEFT JOIN user_interests ui ON ui.interest_id = ei.interest_id AND ui.user_id = %s
@@ -151,10 +154,10 @@ def fetch_filtered_events(interest_id, title, location, event_date, page_number,
         events_query += " AND DATE(e.start_date) = %s"
         parameters.append(event_date)
     
-    # Getting total count
+   
     total_count = execute_query(count_query, parameters, fetchone=True)[0]
 
-    # Adding pagination to the query
+    
     offset = (page_number - 1) * page_size
     events_query += " ORDER BY recommended DESC, e.start_date LIMIT %s OFFSET %s"
     parameters.extend([page_size, offset])

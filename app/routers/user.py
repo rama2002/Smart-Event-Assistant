@@ -79,7 +79,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @router.get("/users/me")
 async def read_users_me(current_user: User = Security(get_current_user)):
-    # del current_user["password_hash"]
+    #del current_user["password_hash"]
     return current_user
 
 @router.get("/users/all", response_model=List[User])
