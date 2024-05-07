@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from app.database.event_db import execute_query
 from app.logging_config import get_logger
 

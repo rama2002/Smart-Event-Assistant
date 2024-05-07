@@ -1,5 +1,4 @@
-from typing import Optional
-from fastapi import HTTPException, Depends, Body, Path,status,Security,APIRouter
+from fastapi import HTTPException, Depends,status,Security,APIRouter
 from pydantic import EmailStr
 from app.common.auth import create_access_token, get_current_admin_user, get_current_user
 from app.database.user_db import create_user, update_user, get_user_by_email, authenticate_user, get_all_users
@@ -7,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.schema.user_models import User, UserCreate, UserUpdate 
 from app.logging_config import get_logger
 from fastapi.security import OAuth2PasswordBearer
-from typing import Optional, List
+from typing import List
 
 
 logger = get_logger(__name__)

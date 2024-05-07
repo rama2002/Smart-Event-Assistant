@@ -8,7 +8,7 @@ from app.schema.user_models import User
 from jose import jwt
 from fastapi import status
 from app.config import SECRET_KEY, ALGO
-from typing import Optional, Union
+from typing import Optional
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

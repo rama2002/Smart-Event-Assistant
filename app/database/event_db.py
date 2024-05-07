@@ -1,5 +1,3 @@
-import psycopg2
-from psycopg2 import sql
 from app.logging_config import get_logger
 from app.database.db import execute_query
 
