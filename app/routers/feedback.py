@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Security
 from app.common.auth import get_current_attendee_user, get_current_speaker_user, get_current_user
 from app.schema.feedback_models import AnswerCreate, QuestionCreate
 from app.schema.user_models import User
-from app.database.feedback_db import add_question, add_answer, get_questions_by_event, get_answers_by_question
+from app.database.feedback_db import add_question, add_answer, get_questions_by_event, get_questions_and_answers_by_event
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ async def post_answer(answer: AnswerCreate, current_user: User = Security(get_cu
         raise HTTPException(status_code=400, detail="Failed to post answer")
 
 @router.get("/events/{event_id}/questions/")
-async def get_questions_for_event(event_id: int, current_user: User = Security(get_current_user)):
+async def get_questions_for_event(event_id: int):
     result = get_questions_by_event(event_id)
     if result:
         return result
@@ -31,9 +31,17 @@ async def get_questions_for_event(event_id: int, current_user: User = Security(g
         raise HTTPException(status_code=404, detail="No questions found for this event")
 
 @router.get("/question/{question_id}/answers/")
-async def get_answers_for_question(question_id: int, current_user: User = Security(get_current_user)):
+async def get_answers_for_question(question_id: int):
     result = get_answers_by_question(question_id)
     if result:
         return result
     else:
         raise HTTPException(status_code=404, detail="No answers found for this question")
+
+@router.get("/questions/{event_id}/questions-answers/")
+async def get_questions_and_answers_for_event(event_id: int):
+    result = get_questions_and_answers_by_event(event_id)
+    if result:
+        return result
+    else:
+        raise HTTPException(status_code=404, detail="No questions found for this event")

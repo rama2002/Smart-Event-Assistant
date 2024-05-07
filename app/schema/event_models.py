@@ -31,6 +31,7 @@ class Event(BaseModel):
     end_date: datetime
     location: str
     created_by: Optional[int] = None
+    cover_attachment_id: Optional[int] = None
 
     class Config:
         orm_mode = True

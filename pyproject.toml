@@ -15,7 +15,11 @@ passlib = "^1.7.4"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 pydantic = {extras = ["email"], version = "^2.7.0"}
 python-multipart = "^0.0.9"
+tzdata = "^2024.1"
 
+
+[tool.poetry.group.dev.dependencies]
+debugpy = "^1.8.1"
 
 [build-system]
 requires = ["poetry-core"]

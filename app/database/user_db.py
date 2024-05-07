@@ -87,5 +87,17 @@ def get_user_by_username(username):
         return user_dict
     return None
 
-
-
+def get_all_users():
+    query = "SELECT user_id, username, email, role_id FROM public.users;"
+    results = execute_query(query, fetch=True)
+    if results:
+        return [
+            {
+                "user_id": result[0],
+                "username": result[1],
+                "email": result[2],
+                "role_id": result[3]
+            }
+            for result in results
+        ]
+    return None

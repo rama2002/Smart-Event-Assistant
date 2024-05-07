@@ -3,14 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import feedback, speakers, user,event,interests, user_interests, reporting
 import uvicorn
 
-app = FastAPI()
+app = FastAPI(debug=True)
 trusted_origins = ["http://localhost:3000", "http://10.81.230.210:3000"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=trusted_origins,
     allow_credentials=True,
-    allow_methods=["POST", "GET"],
+    allow_methods=["POST", "GET", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 

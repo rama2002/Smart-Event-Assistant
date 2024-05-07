@@ -22,7 +22,6 @@ def update_interest(interest_id: int, name: str):
     result = execute_query(query, data, fetchone=True)  
     return result
 
-
 def add_user_interest(user_id: int, interest_id: int) -> bool:
    
     query = """
@@ -53,3 +52,58 @@ def get_user_interests(user_id: int) -> List[int]:
     '''
     results = execute_query(query, (user_id,), fetch=True)
     return [result['interest_id'] for result in results] if results else []
+
+def add_event_interest(event_id: int, interest_id: int) -> bool:
+    query = """
+    INSERT INTO event_interests (event_id, interest_id)
+    VALUES (%s, %s);
+    """
+    try:
+        execute_query(query, (event_id, interest_id))
+        return True
+    except Exception as e:
+        logger.error(f"Failed to add interest to event: {e}")
+        return False
+
+def delete_event_interest(event_id: int, interest_id: int) -> bool:
+    query = """
+    DELETE FROM event_interests
+    WHERE event_id = %s AND interest_id = %s;
+    """
+    try:
+        execute_query(query, (event_id, interest_id))
+        return True
+    except Exception as e:
+        logger.error(f"Failed to delete interest from event: {e}")
+        return False
+
+def get_all_interests():
+    query = "SELECT interest_id, name FROM interests;"
+    results = execute_query(query, fetch=True)
+    if results:
+        return [
+            {
+                "interest_id": result['interest_id'],
+                "name": result['name']
+            }
+            for result in results
+        ]
+    return []
+
+def get_event_interests(event_id: int):
+    query = """
+    SELECT i.interest_id, i.name
+    FROM interests i
+    JOIN event_interests ei ON ei.interest_id = i.interest_id
+    WHERE ei.event_id = %s;
+    """
+    results = execute_query(query, (event_id,), fetch=True)
+    if results:
+        return [
+            {
+                "interest_id": result['interest_id'],
+                "name": result['name']
+            }
+            for result in results
+        ]
+    return []
