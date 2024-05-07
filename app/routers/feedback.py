@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Security
 from app.common.auth import get_current_attendee_user, get_current_speaker_user
 from app.schema.feedback_models import AnswerCreate, QuestionCreate
 from app.schema.user_models import User
-from app.database.feedback_db import add_question, add_answer, get_questions_by_event, get_questions_and_answers_by_event
+from app.database.feedback_db import add_question, add_answer, get_answers_by_question, get_questions_by_event, get_questions_and_answers_by_event
 
 router = APIRouter()
 
