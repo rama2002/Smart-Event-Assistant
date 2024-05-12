@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Path, Query, Security
 from typing import List
+
 from app.common.auth import get_current_attendee_user
+from app.schema import user_interest_models
 from app.database.interest_db import add_user_interest, delete_user_interest, get_user_interests
 from app.schema.user_models import User
 

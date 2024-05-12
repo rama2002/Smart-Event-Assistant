@@ -1,7 +1,7 @@
 import io
 from fastapi import APIRouter, File, HTTPException, Query, Security, UploadFile
 from fastapi.responses import StreamingResponse
-from app.common.auth import get_current_admin_user, get_current_adminspeaker_user, get_current_attendee_user, get_current_user, get_optional_current_user
+from app.common.auth import get_current_admin_user, get_current_adminspeaker_user, get_current_attendee_user, get_current_speaker_user, get_current_user, get_optional_current_user
 from app.database.attachment_db import add_attachment, delete_attachment, fetch_attachments_for_event, get_attachment
 from app.database.interest_db import add_event_interest, delete_event_interest, get_event_interests
 from app.database.event_db import get_event_by_id, add_event, fetch_filtered_events, update_event, delete_event, enroll_in_event, unenroll_in_event,check_enrollment, get_enrolled_events_for_attendee, set_event_cover_image
@@ -177,7 +177,7 @@ async def remove_interest_from_event(event_id: int, interest_id: int, current_us
         raise HTTPException(status_code=500, detail="Failed to remove interest from event")
     
 @router.get("/events/{event_id}/interests/")
-async def list_event_interests(event_id: int, current_user: User = Security(get_current_user)):
+async def list_event_interests(event_id: int):
     interests = get_event_interests(event_id)
     return interests
 

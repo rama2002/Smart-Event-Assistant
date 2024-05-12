@@ -30,7 +30,7 @@ async def update_interest_by_id(interest_id: int, interest_update: InterestUpdat
         raise HTTPException(status_code=404, detail="Interest not found")
     
 @router.get("/interests/")
-async def list_all_interests(current_user: User = Security(get_current_user)):
+async def list_all_interests():
     interests = get_all_interests()
     if not interests:
         raise HTTPException(status_code=404, detail="No interests found")

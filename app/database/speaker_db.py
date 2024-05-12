@@ -1,3 +1,4 @@
+import psycopg2
 from app.database.event_db import execute_query
 from app.logging_config import get_logger
 

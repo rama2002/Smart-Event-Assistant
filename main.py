@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import feedback, speakers, user,event,interests, user_interests, reporting
+from app.routers import feedback, speakers, user,event,interests, user_interests, reporting, chatbot
 import uvicorn
 
 app = FastAPI(debug=True)
@@ -21,6 +21,7 @@ app.include_router(user_interests.router)
 app.include_router(speakers.router)
 app.include_router(feedback.router)
 app.include_router(reporting.router)
+app.include_router(chatbot.router)
 
 @app.get("/")
 def root():

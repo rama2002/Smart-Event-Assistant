@@ -1,4 +1,5 @@
-from fastapi import HTTPException, Depends,status,Security,APIRouter
+from typing import Optional
+from fastapi import HTTPException, Depends, Body, Path,status,Security,APIRouter
 from pydantic import EmailStr
 from app.common.auth import create_access_token, get_current_admin_user, get_current_user
 from app.database.user_db import create_user, update_user, get_user_by_email, authenticate_user, get_all_users
@@ -6,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.schema.user_models import User, UserCreate, UserUpdate 
 from app.logging_config import get_logger
 from fastapi.security import OAuth2PasswordBearer
-from typing import List
+from typing import Optional, List
 
 
 logger = get_logger(__name__)
@@ -78,7 +79,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @router.get("/users/me")
 async def read_users_me(current_user: User = Security(get_current_user)):
-    #del current_user["password_hash"]
+    # del current_user["password_hash"]
     return current_user
 
 @router.get("/users/all", response_model=List[User])
