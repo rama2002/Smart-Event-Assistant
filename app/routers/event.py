@@ -114,7 +114,7 @@ async def get_events(
     page_size: int = Query(10, description="Number of items per page"),
     current_user: Optional[User] = Security(get_optional_current_user, use_cache=False)
 ):
-    user_id = current_user.user_id if current_user else None
+    user_id = current_user.user_id if current_user and current_user.role_id==3 else None
     events, total_pages = fetch_filtered_events(interest_id, title, location, event_date, page_number, page_size, user_id)
     return {
         "events": events,
