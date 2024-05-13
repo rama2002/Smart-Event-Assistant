@@ -9,12 +9,6 @@ class EventCreate(BaseModel):
     end_date: datetime
     location: str
 
-    @validator('end_date')
-    def check_dates(cls, v, values, **kwargs):
-        if 'start_date' in values and v < values['start_date']:
-            raise ValueError('end_date must be after start_date')
-        return v
-
 
 class EventUpdate(BaseModel):
     title: str = None

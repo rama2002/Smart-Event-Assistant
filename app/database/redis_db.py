@@ -14,7 +14,7 @@ def json_serializer(data):
             return super(CustomEncoder, self).default(obj)
     return json.dumps(data, cls=CustomEncoder)
 
-def cache_data(key, data, expire=3600):
+def cache_data(key, data, expire=10):
     """
     Cache any data with serialization and an expiration time.
     """
@@ -39,7 +39,7 @@ def cache_event(event_id, event_data):
     Specifically cache event data using an event-specific key.
     """
     key = f"event:{event_id}"
-    cache_data(key, event_data, expire=3600)  
+    cache_data(key, event_data, expire=10)  
 
 def get_cached_event(event_id):
     """
