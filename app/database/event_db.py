@@ -95,55 +95,71 @@ def fetch_filtered_events(interest_id, title, location, event_date, page_number,
     cached_data = get_cached_data(cache_key)
     if cached_data:
         return cached_data
-
+    
     parameters = []
-    count_query = """
+    count_base_query = """
     SELECT COUNT(*)
     FROM events e
     LEFT JOIN event_interests ei ON e.event_id = ei.event_id
     WHERE 1=1
     """
-    events_query = """
-    SELECT e.event_id, e.title, e.description, e.start_date, e.end_date, e.location, e.created_by, FALSE AS recommended, e.cover_attachment_id
+    count_query = count_base_query
+
+    
+    events_base_query = """
+    SELECT e.event_id, e.title, e.description, e.start_date, e.end_date, e.location, e.created_by, FALSE AS recommended, cover_attachment_id
     FROM events e
     LEFT JOIN event_interests ei ON e.event_id = ei.event_id
     WHERE 1=1
     """
+    events_query = events_base_query
 
     if user_id:
-        events_query += " AND EXISTS (SELECT 1 FROM user_interests ui WHERE ui.interest_id = ei.interest_id AND ui.user_id = %s)"
-        count_query += " AND EXISTS (SELECT 1 FROM user_interests ui WHERE ui.interest_id = ei.interest_id AND ui.user_id = %s)"
+        
+        events_query = """
+        SELECT e.event_id, e.title, e.description, e.start_date, e.end_date, e.location, e.created_by,
+        CASE WHEN ui.interest_id IS NOT NULL THEN TRUE ELSE FALSE END AS recommended, cover_attachment_id
+        FROM events e
+        LEFT JOIN event_interests ei ON e.event_id = ei.event_id
+        LEFT JOIN user_interests ui ON ui.interest_id = ei.interest_id AND ui.user_id = %s
+        WHERE 1=1
+        """
+        
+        count_query = """
+        SELECT COUNT(*)
+        FROM events e
+        LEFT JOIN event_interests ei ON e.event_id = ei.event_id
+        LEFT JOIN user_interests ui ON ui.interest_id = ei.interest_id AND ui.user_id = %s
+        WHERE 1=1
+        """
         parameters.append(user_id)
-
+    
     if interest_id:
         count_query += " AND ei.interest_id = %s"
         events_query += " AND ei.interest_id = %s"
         parameters.append(interest_id)
-
+    
     if title:
-        title_pattern = f'%{title}%'
         count_query += " AND e.title ILIKE %s"
         events_query += " AND e.title ILIKE %s"
-        parameters.append(title_pattern)
-
+        parameters.append(f'%{title}%')
+    
     if location:
-        location_pattern = f'%{location}%'
         count_query += " AND e.location ILIKE %s"
         events_query += " AND e.location ILIKE %s"
-        parameters.append(location_pattern)
-
+        parameters.append(f'%{location}%')
+    
     if event_date:
         count_query += " AND DATE(e.start_date) = %s"
         events_query += " AND DATE(e.start_date) = %s"
         parameters.append(event_date)
-
+    
     
     total_count = execute_query(count_query, parameters, fetchone=True)[0]
-    total_pages = max(1, (total_count + page_size - 1) // page_size)
 
-
-    events_query += " ORDER BY e.start_date LIMIT %s OFFSET %s"
-    parameters.extend([page_size, (page_number - 1) * page_size])
+    offset = (page_number - 1) * page_size
+    events_query += " ORDER BY recommended DESC, e.start_date LIMIT %s OFFSET %s"
+    parameters.extend([page_size, offset])
 
     results = execute_query(events_query, parameters, fetch=True)
     events = [
@@ -151,8 +167,8 @@ def fetch_filtered_events(interest_id, title, location, event_date, page_number,
             "event_id": result[0],
             "title": result[1],
             "description": result[2],
-            "start_date": result[3].isoformat() if result[3] else None,
-            "end_date": result[4].isoformat() if result[4] else None,
+            "start_date": result[3],
+            "end_date": result[4],
             "location": result[5],
             "created_by": result[6],
             "recommended": result[7],
@@ -161,9 +177,8 @@ def fetch_filtered_events(interest_id, title, location, event_date, page_number,
         for result in results
     ]
 
-   
+    total_pages = max(1, (total_count + page_size - 1) // page_size)
     cache_data(cache_key, (events, total_pages))
-
     return events, total_pages
 
 def enroll_in_event(user_id, event_id):

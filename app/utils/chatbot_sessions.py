@@ -1,5 +1,3 @@
-# chatbot_sessions.py
-
 import threading
 from datetime import datetime, timedelta
 

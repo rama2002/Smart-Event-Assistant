@@ -1,5 +1,3 @@
-# azurechatbot.py
-
 from langchain_openai import AzureChatOpenAI
 from app.utils.prompt_template import get_chat_template
 from app.database.event_db import fetch_all_event_data
@@ -18,7 +16,6 @@ def format_event_data(events):
         questions_str = ""
         if event['questions']:
             for question in event['questions']:
-                # Use 'asked_on' directly since it's expected to be a string
                 asked_on_str = question['asked_on'] if question['asked_on'] else "Date not available"
                 question_text = f"Q: {question['question_text']} (Asked on: {asked_on_str})"
                 answers_text = "\n".join(
